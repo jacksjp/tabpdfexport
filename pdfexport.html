@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<title> export to PDF </title>
+	<script src="https://code.jquery.com/jquery-3.3.1.min.js" crossorigin="anonymous"></script>
+	<script type="text/javascript">
+		
+		var fname;
+		var ftype;
+
+		printfun = function(){
+			// parent.parent.window.print();
+			// console.log(parent.parent.window);
+			// console.log(window.parent.location.pathname);
+			var url = window.parent.location.pathname;
+			
+			
+			var paramval = GetParameterValues('id');
+			
+			/* if(fname){
+			var srcurl = window.parent.location.protocol + '//' + window.parent.location.hostname + window.parent.location.pathname + '.pdf?' + fname + '=' + ftype[0].value;
+			}
+			else{
+				var srcurl = window.parent.location.protocol + '//' + window.parent.location.hostname + window.parent.location.pathname + '.pdf?'	
+			} */
+			if(fname){
+				if(paramval){
+				var srcurl = window.parent.location.protocol + '//' + window.parent.location.hostname + paramval + '.pdf?' + fname + '=' + ftype[0].value;
+				}
+			else{
+				var srcurl = window.parent.location.protocol + '//' + window.parent.location.hostname + window.parent.location.pathname + '.pdf?' + fname + '=' + ftype[0].value;
+				}
+			}
+			else{
+				if(paramval){
+					var srcurl = window.parent.location.protocol + '//' + window.parent.location.hostname + paramval + '.pdf?';
+					}
+				else{
+					var srcurl = window.parent.location.protocol + '//' + window.parent.location.hostname + window.parent.location.pathname + '.pdf?';
+				}
+			}
+			// window.alert(srcurl);
+			// window.alert(paramval);
+			 /* var req = new XMLHttpRequest();
+			  req.open("GET", srcurl, true);
+			  req.responseType = "blob";
+			  req.onload = function (event) {
+				var blob = req.response;
+				console.log(blob.size);
+				var link=document.createElement('a');
+				console.log(link);
+				link.href=window.URL.createObjectURL(blob);
+				console.log(link.href)
+				$("#dummy").attr("src", srcurl);
+				link.download="new" + new Date() + ".pdf";
+				link.click();
+			  };
+			req.send(); */
+			window.alert(srcurl);
+			SaveToDisk(srcurl, 'download.pdf')
+		}
+		
+		function SaveToDisk(fileURL, fileName) {
+    // for non-IE
+    if (!window.ActiveXObject) {
+        var save = document.createElement('a');
+        save.href = fileURL;
+        save.target = '_blank';
+        save.download = fileName || 'unknown';
+		
+		try{
+			var evt = new MouseEvent('click', {
+				'view': window,
+				'bubbles': true,
+				'cancelable': false
+			});
+		} catch(e){
+			window.open(fileURL, fileName)
+		}
+        save.dispatchEvent(evt);
+
+        (window.URL || window.webkitURL).revokeObjectURL(save.href);
+    }
+
+    // for IE < 11
+    else if ( !! window.ActiveXObject && document.execCommand)     {
+        var _window = window.open(fileURL, '_blank');
+        _window.document.close();
+        _window.document.execCommand('SaveAs', true, fileName || fileURL)
+        _window.close();
+    }
+}
+		
+
+		
+		function GetParameterValues(param) {  
+            var url = window.location.href.slice(window.location.href.indexOf('?') + 1).split('&');  
+            for (var i = 0; i < url.length; i++) {  
+                var urlparam = url[i].split('=');  
+                if (urlparam[0] == param) {  
+                    return urlparam[1];  
+                }  
+            }  
+        }  
+		
+		getTableau = function() {
+        	return parent.parent.tableau;
+        }
+                                
+                                getCurrentViz = function() {
+                                                return getTableau().VizManager.getVizs()[0];
+                                }
+                                
+                                getCurrentWorkbook = function() {
+                                                return getCurrentViz().getWorkbook();
+                                }
+								function initViz() {
+                                                tableau = getTableau();
+                                                workbook = getCurrentWorkbook();
+                                                viz = getCurrentViz();
+												// worksheet = workbook.getActiveSheet();
+												// console.log(worksheet);
+												viz.addEventListener('filterchange', onFilterChange);
+												/*worksheet.getWorksheets().get('Sale Map').getFiltersAsync()
+												.then(function(val){
+													console.log(val);
+												}) */
+												console.log(viz);
+                                }
+								function onFilterChange(filterEvent) {
+
+filterEvent.getFilterAsync().then(reportSelectedFilter);
+
+}
+
+
+
+function reportSelectedFilter(field) {
+fname = field.getFieldName();
+ftype = field.getAppliedValues();
+console.log(fname,ftype);
+}
+
+
+
+function listenToFilterSelection(viz) {
+
+viz.addEventListener('filterchange', onFilterChange);
+
+}
+
+		</script>
+</head>
+<body onload="initViz();">
+	<button id="myBtn" onclick="printfun();"> print screen </button>
+	<iframe id="dummy" name="dummy" style="display:none; visibility:hidden"></iframe>
+</body>
+</html>
